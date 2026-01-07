@@ -1,13 +1,17 @@
 package classes;
 
+import classes.CategoryEnum;
+
+import java.util.Objects;
+
 public class Ingredient {
-    int id;
-    String name;
-    Double price;
-    CategoryEnum category;
-    Dish dish;
+    private final int id;
+    private final String name;
+    private final double price;
+    private final CategoryEnum category;
+    private final Dish dish;
 
-    public Ingredient(int id, String name, Double price, CategoryEnum category, Dish dish) {
+    public Ingredient(int id, String name, double price, CategoryEnum category, Dish dish) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -15,45 +19,12 @@ public class Ingredient {
         this.dish = dish;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-
-    public CategoryEnum getCategory() {
-        return category;
-    }
-
-    public void setCategory(CategoryEnum category) {
-        this.category = category;
-    }
-
-    public Dish getDish() {
-        return dish;
-    }
-
-    public void setDish(Dish dish) {
-        this.dish = dish;
-    }
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+    public CategoryEnum getCategory() { return category; }
+    public Dish getDish() { return dish; }
+    public String getDishName() { return dish == null ? null : dish.getName(); }
 
     @Override
     public String toString() {
@@ -62,14 +33,24 @@ public class Ingredient {
                 ", name='" + name + '\'' +
                 ", price=" + price +
                 ", category=" + category +
-                ", dish=" + dish +
+                ", dish=" + (dish == null ? null : dish.getName()) +
                 '}';
     }
-    public String getDishName() {
-        if (dish != null) {
-            return dish.getName();
-        }
-        return null;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Ingredient that)) return false;
+        return id == that.id &&
+                Double.compare(that.price, price) == 0 &&
+                Objects.equals(name, that.name) &&
+                category == that.category &&
+                Objects.equals(dish == null ? null : dish.getId(),
+                        that.dish == null ? null : that.dish.getId());
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, price, category, dish == null ? null : dish.getId());
+    }
 }
