@@ -1,7 +1,9 @@
 import Connection.DataRetriever;
+import classes.CategoryEnum;
 import classes.Dish;
 import classes.Ingredient;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
@@ -15,6 +17,7 @@ public class Main {
 //            System.out.println("Dish trouvé :");
 //            System.out.println("ID = " + dish.getId());
 //            System.out.println("Nom = " + dish.getName());
+//            System.out.println("price = " + dish.getPrice());
 //            System.out.println("Type = " + dish.getDishType());
 //
 //            System.out.println("\nIngrédients :");
@@ -83,17 +86,44 @@ public class Main {
 //            e.printStackTrace();
 //        }
 
-        Dish dish = retriever.findDishById(1);
+//        Dish dish = retriever.findDishById(1);
+//
+//        System.out.println("Plat : " + dish.getName());
+//        System.out.println("Coût ingrédients = " + dish.getDishCost());
+//
+//        try {
+//            System.out.println("Marge brute = " + dish.getGrossMargin());
+//        } catch (RuntimeException e) {
+//            System.out.println("⚠ " + e.getMessage());
+//        }
 
-        System.out.println("Plat : " + dish.getName());
-        System.out.println("Coût ingrédients = " + dish.getDishCost());
 
-        try {
-            System.out.println("Marge brute = " + dish.getGrossMargin());
-        } catch (RuntimeException e) {
-            System.out.println("⚠ " + e.getMessage());
+//        System.out.println("=== Test findDishById et getGrossMargin ===");
+//        Dish salade = retriever.findDishById(1);
+//        System.out.println("Plat : " + salade.getName());
+//        System.out.println("Coût des ingrédients : " + salade.getDishCost());
+//        try {
+//            System.out.println("Marge brute : " + salade.getGrossMargin());
+//        } catch (RuntimeException e) {
+//            System.out.println("Exception attendue : " + e.getMessage());
+//        }
+
+
+//        System.out.println("=== Test findDishById et getGrossMargin ===");
+//        Dish salade = retriever.findDishById(1);
+//        System.out.println("Plat : " + salade.getName());
+//        System.out.println("Coût des ingrédients : " + salade.getDishCost());
+//        try {
+//            System.out.println("Marge brute : " + salade.getGrossMargin());
+//        } catch (RuntimeException e) {
+//            System.out.println("Exception attendue : " + e.getMessage());
+//        }
+
+        System.out.println("\n=== Test findDishByIngredientName ===");
+        List<Dish> dishesWithTomate = retriever.findDishByIngredientName("Tomate");
+        for (Dish d : dishesWithTomate) {
+            System.out.println("Plat trouvé : " + d.getName() + " | Prix : " + d.getPrice());
         }
-
-
     }
-}
+    }
+

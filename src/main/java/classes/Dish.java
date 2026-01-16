@@ -10,8 +10,7 @@ public class Dish {
     private final String name;
     private final DishTypeEnum dishType;
     private final List<Ingredient> ingredients;
-
-     private Double price;
+    private Double price;
 
     public Dish(int id, String name, DishTypeEnum dishType, Double price) {
         this.id = id;
@@ -48,7 +47,7 @@ public class Dish {
 
         if (price == null) {
             throw new RuntimeException(
-                    "Impossible de calculer la marge : le prix de vente n'est pas encore défini"
+                    "le prix de vente n'est pas encore défini"
             );
         }
 
