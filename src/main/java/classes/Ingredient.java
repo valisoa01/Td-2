@@ -1,6 +1,5 @@
 package classes;
 
-import classes.CategoryEnum;
 
 import java.util.Objects;
 

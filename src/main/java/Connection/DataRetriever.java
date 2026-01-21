@@ -208,8 +208,7 @@ public class DataRetriever {
 
     public List<Dish> findDishByIngredientName(String ingredientName) {
         List<Dish> dishes = new ArrayList<>();
-        // On ajoute d.price dans le SELECT pour récupérer le prix du plat
-        String sql = "SELECT d.id, d.name, d.dish_type, d.price " +
+         String sql = "SELECT d.id, d.name, d.dish_type, d.price " +
                 "FROM dish d " +
                 "JOIN ingredient i ON i.id_dish = d.id " +
                 "WHERE i.name ILIKE ?";

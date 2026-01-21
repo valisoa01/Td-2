@@ -11,48 +11,48 @@ public class Main {
 
         DataRetriever retriever = new DataRetriever();
 
-//        try {
-//            Dish dish = retriever.findDishById(1);
-//
-//            System.out.println("Dish trouvé :");
-//            System.out.println("ID = " + dish.getId());
-//            System.out.println("Nom = " + dish.getName());
-//            System.out.println("price = " + dish.getPrice());
-//            System.out.println("Type = " + dish.getDishType());
-//
-//            System.out.println("\nIngrédients :");
-//            for (Ingredient ing : dish.getIngredients()) {
-//                System.out.println("- " + ing.getName() + "   (" + ing.getCategory() + ")");
-//            }
-//
-//        } catch (Exception e) {
-//            System.out.println("Erreur : " + e.getMessage());
-//            e.printStackTrace();
-//        }
+       try {
+           Dish dish = retriever.findDishById(1);
+
+           System.out.println("Dish trouvé :");
+           System.out.println("ID = " + dish.getId());
+           System.out.println("Nom = " + dish.getName());
+           System.out.println("price = " + dish.getPrice());
+           System.out.println("Type = " + dish.getDishType());
+
+           System.out.println("\nIngrédients :");
+           for (Ingredient ing : dish.getIngredients()) {
+               System.out.println("- " + ing.getName() + "   (" + ing.getCategory() + ")");
+           }
+
+       } catch (Exception e) {
+           System.out.println("Erreur : " + e.getMessage());
+           e.printStackTrace();
+       }
 
 
-//        try {
-//            int dishId = 1;
-//
-//            List<Ingredient> ingredients = retriever.findIngredientsByDishId(dishId);
-//
-//            System.out.println("Ingrédients du plat id = " + dishId + " :");
-//            for (Ingredient ing : ingredients) {
-//                System.out.println(
-//                        "- " + ing.getName()
-//                                + " | prix = " + ing.getPrice()
-//                                + " | catégorie = " + ing.getCategory()
-//                );
-//            }
-//
-//            if (ingredients.isEmpty()) {
-//                System.out.println("⚠ Aucun ingrédient trouvé pour ce plat.");
-//            }
-//
-//        } catch (Exception e) {
-//            System.out.println("❌ Erreur : " + e.getMessage());
-//            e.printStackTrace();
-//        }
+       try {
+           int dishId = 1;
+
+           List<Ingredient> ingredients = retriever.findIngredientsByDishId(dishId);
+
+           System.out.println("Ingrédients du plat id = " + dishId + " :");
+           for (Ingredient ing : ingredients) {
+               System.out.println(
+                       "- " + ing.getName()
+                               + " | prix = " + ing.getPrice()
+                               + " | catégorie = " + ing.getCategory()
+               );
+           }
+
+           if (ingredients.isEmpty()) {
+               System.out.println("⚠ Aucun ingrédient trouvé pour ce plat.");
+           }
+
+       } catch (Exception e) {
+           System.out.println("❌ Erreur : " + e.getMessage());
+           e.printStackTrace();
+       }
 
 
 //        try {
