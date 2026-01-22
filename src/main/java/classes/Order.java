@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 public class Order {
+    private static final double VAT_RAT = 0.2;
     private int id;
     private String reference;
     private Instant creationDate;
@@ -43,9 +44,19 @@ public class Order {
         this.dishOrders = dishOrders;
     }
     public Double getTotalAmountWithoutVAT() {
+        if (dishOrders == null || dishOrders.isEmpty()) {
+            return 0.0;
+        }
+
+        return dishOrders.stream()
+                .mapToDouble(dishOrder ->
+                        dishOrder.getDish().getPrice() * dishOrder.getQuantity()
+                )
+                .sum();
 
     }
     public Double getTotalAmountWithVAT() {
-
+        double totalWithoutVAT = getTotalAmountWithoutVAT();
+        return totalWithoutVAT * (1 + VAT_RAT);
     }
 }

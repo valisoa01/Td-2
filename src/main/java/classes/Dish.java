@@ -80,10 +80,5 @@ public class Dish {
         return Objects.hash(id, name, dishType);
     }
 
-    public Double getDishCost() {
 
-    }
-    public Double getGrossMargin() {
-
-    }
 }
