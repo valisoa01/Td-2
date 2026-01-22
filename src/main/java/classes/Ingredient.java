@@ -8,22 +8,22 @@ public class Ingredient {
     private final String name;
     private final double price;
     private final CategoryEnum category;
-    private final Dish dish;
+//    private final Dish dish;
 
     public Ingredient(int id, String name, double price, CategoryEnum category, Dish dish) {
         this.id = id;
         this.name = name;
         this.price = price;
         this.category = category;
-        this.dish = dish;
+//        this.dish = dish;
     }
 
     public int getId() { return id; }
     public String getName() { return name; }
     public double getPrice() { return price; }
     public CategoryEnum getCategory() { return category; }
-    public Dish getDish() { return dish; }
-    public String getDishName() { return dish == null ? null : dish.getName(); }
+//    public Dish getDish() { return dish; }
+//    public String getDishName() { return dish == null ? null : dish.getName(); }
 
     @Override
     public String toString() {
@@ -32,7 +32,7 @@ public class Ingredient {
                 ", name='" + name + '\'' +
                 ", price=" + price +
                 ", category=" + category +
-                ", dish=" + (dish == null ? null : dish.getName()) +
+//                ", dish=" + (dish == null ? null : dish.getName()) +
                 '}';
     }
 
@@ -43,13 +43,13 @@ public class Ingredient {
         return id == that.id &&
                 Double.compare(that.price, price) == 0 &&
                 Objects.equals(name, that.name) &&
-                category == that.category &&
-                Objects.equals(dish == null ? null : dish.getId(),
-                        that.dish == null ? null : that.dish.getId());
+                category == that.category;
+//                Objects.equals(dish == null ? null : dish.getId(),
+//                        that.dish == null ? null : that.dish.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, price, category, dish == null ? null : dish.getId());
+        return Objects.hash(id, name, price, category);
     }
 }

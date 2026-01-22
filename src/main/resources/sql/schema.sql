@@ -21,16 +21,28 @@ CREATE TABLE DishIngredient(
                                quantity_required NUMERIC,
                                Unit unit_type
 );
+
 INSERT INTO DishIngredient VALUES (1, 1, 1, 0.20,'KG'),(2,1,2,0.15,'KG'),(3,2,3,1.00,'KG'),
                                   (4,4,4,0.30,'KG'),(5,4,5,0.20,'KG');
 
 ALTER TABLE dish RENAME COLUMN price TO selling_price;
 
 
-UPDATE Dish SET selling_price = 3500.00 WHERE id_dish = 1;
-UPDATE Dish SET selling_price = 12000.00 WHERE id_dish = 2;
-UPDATE Dish SET selling_price = NULL WHERE id_dish = 3;
-UPDATE Dish SET selling_price = 8000.00 WHERE id_dish = 4;
-UPDATE Dish SET selling_price = NULL WHERE id_dish = 5;
-
 ALTER TABLE DishIngredient drop COLUMN id_dish;
+
+create type  mouvement_type as enum('IN','OUT');
+CREATE TABLE stock_movement (
+                                id INT PRIMARY KEY, -- identifiant métier
+                                ingredient_id INT NOT NULL REFERENCES ingredient(id),
+                                stock_value_id INT NOT NULL REFERENCES stock_value(id),
+                                type mouvement_type NOT NULL,
+                                creation_datetime TIMESTAMP NOT NULL
+);
+
+ CREATE TABLE stock_value (
+                             id SERIAL PRIMARY KEY,
+                             quantity DOUBLE PRECISION NOT NULL,
+                             unit unit_type NOT NULL
+);
+
+
