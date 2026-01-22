@@ -1,0 +1,186 @@
+package Connection;
+
+import classes.*;
+
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DBRetriever {
+
+    /* =============================== */
+    /* ===== INGREDIENT ============== */
+    /* =============================== */
+
+    public Ingredient findIngredientById(int ingredientId) {
+
+        String sql = """
+            SELECT id, name, price, category
+            FROM ingredient
+            WHERE id = ?
+        """;
+
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, ingredientId);
+            ResultSet rs = ps.executeQuery();
+
+            if (!rs.next()) {
+                throw new RuntimeException("Ingredient not found (id=" + ingredientId + ")");
+            }
+
+            Ingredient ingredient = new Ingredient(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getDouble("price"),
+                    CategoryEnum.valueOf(rs.getString("category")),
+                    null
+            );
+
+            // Charger les mouvements de stock
+            ingredient.setStockMovementList(
+                    findStockMovementsByIngredientId(ingredientId)
+            );
+
+            return ingredient;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /* ===================================== */
+    /* ===== STOCK MOVEMENTS (READ) ======== */
+    /* ===================================== */
+
+    public List<StockMovement> findStockMovementsByIngredientId(int ingredientId) {
+
+        String sql = """
+            SELECT id_stock,
+                   quantity,
+                   type,
+                   unit,
+                   creation_datetime
+            FROM stockmovement
+            WHERE id_ingredient = ?
+            ORDER BY creation_datetime
+        """;
+
+        List<StockMovement> movements = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, ingredientId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                StockMovement sm = new StockMovement();
+                sm.setId(rs.getInt("id_stock"));
+                sm.setQuantity(rs.getDouble("quantity"));
+                sm.setMouvementType(
+                        Mouvement_type.valueOf(rs.getString("type"))
+                );
+                sm.setUnit(Unit.valueOf(rs.getString("unit")));
+                sm.setCreaction_datetime(
+                        rs.getDate("creation_datetime").toLocalDate()
+                );
+
+                movements.add(sm);
+            }
+
+            return movements;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /* ===================================== */
+    /* ===== INGREDIENT + STOCK (SAVE) ===== */
+    /* ===================================== */
+
+    public Ingredient saveIngredient(Ingredient ingredient) {
+
+        Connection conn = DBConnection.getDBConnection();
+
+        try {
+            conn.setAutoCommit(false);
+
+            /* 1️⃣ Sauvegarde de l’ingredient si nouveau */
+            if (ingredient.getId() == 0) {
+                String insertIngredient = """
+                    INSERT INTO ingredient(name, price, category)
+                    VALUES (?, ?, ?::category_enum)
+                    RETURNING id
+                """;
+
+                try (PreparedStatement ps = conn.prepareStatement(insertIngredient)) {
+                    ps.setString(1, ingredient.getName());
+                    ps.setDouble(2, ingredient.getPrice());
+                    ps.setString(3, ingredient.getCategory().name());
+
+                    ResultSet rs = ps.executeQuery();
+                    rs.next();
+                    ingredient.setId(rs.getInt(1));
+                }
+            }
+
+            /* 2️⃣ Sauvegarde des mouvements de stock */
+            for (StockMovement sm : ingredient.getStockMovementList()) {
+
+                String insertMovement = """
+                    INSERT INTO stockmovement
+                    (id_stock, id_ingredient, quantity, type, unit, creation_datetime)
+                    VALUES (?, ?, ?, ?::mouvement_type, ?::unit_type, ?)
+                    ON CONFLICT (id_stock) DO NOTHING
+                """;
+
+                try (PreparedStatement ps = conn.prepareStatement(insertMovement)) {
+                    ps.setInt(1, sm.getId());
+                    ps.setInt(2, ingredient.getId());
+                    ps.setDouble(3, sm.getQuantity());
+                    ps.setString(4, sm.getMouvementType().name());
+                    ps.setString(5, sm.getUnit().name());
+                    ps.setDate(6, Date.valueOf(sm.getCreaction_datetime()));
+                    ps.executeUpdate();
+                }
+            }
+
+            conn.commit();
+            return ingredient;
+
+        } catch (Exception e) {
+            try { conn.rollback(); } catch (SQLException ignored) {}
+            throw new RuntimeException(e);
+
+        } finally {
+            try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
+        }
+    }
+
+    /* ===================================== */
+    /* ===== STOCK CALCULATION ============= */
+    /* ===================================== */
+
+    public double getStockValueAt(int ingredientId, LocalDate date) {
+
+        Ingredient ingredient = findIngredientById(ingredientId);
+
+        double stock = 0;
+
+        for (StockMovement sm : ingredient.getStockMovementList()) {
+            if (!sm.getCreaction_datetime().isAfter(date)) {
+                if (sm.getMouvementType() == Mouvement_type.IN) {
+                    stock += sm.getQuantity();
+                } else {
+                    stock -= sm.getQuantity();
+                }
+            }
+        }
+        return stock;
+    }
+}

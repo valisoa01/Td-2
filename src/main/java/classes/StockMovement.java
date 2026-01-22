@@ -3,13 +3,13 @@ package classes;
 import java.time.LocalDate;
 
 public class StockMovement {
-    private int id;
-    private Ingredient ingredient;
-    private Mouvement_type mouvementType;
-    private Unit unit;
-    private LocalDate creaction_datetime;
 
-    public StockMovement() {}
+        private int id;
+        private Ingredient ingredient;
+        private Mouvement_type mouvementType;
+        private double quantity;
+        private Unit unit;
+        private LocalDate creaction_datetime;
 
     public int getId() {
         return id;
@@ -35,6 +35,14 @@ public class StockMovement {
         this.mouvementType = mouvementType;
     }
 
+    public double getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(double quantity) {
+        this.quantity = quantity;
+    }
+
     public Unit getUnit() {
         return unit;
     }
@@ -49,16 +57,5 @@ public class StockMovement {
 
     public void setCreaction_datetime(LocalDate creaction_datetime) {
         this.creaction_datetime = creaction_datetime;
-    }
-
-    @Override
-    public String toString() {
-        return "StockMovement{" +
-                "id=" + id +
-                ", ingredient=" + ingredient +
-                ", mouvementType=" + mouvementType +
-                ", unit=" + unit +
-                ", creaction_datetime=" + creaction_datetime +
-                '}';
     }
 }

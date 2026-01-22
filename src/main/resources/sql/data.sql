@@ -11,3 +11,13 @@ INSERT INTO Ingredient (id, name, price, category) VALUES
 (4, 'Chocolat', 3000.00, 'OTHER'),
 (5, 'Beurre', 2500.00, 'DAIRY');
 
+
+INSERT INTO stockmovement VALUES
+                              (1, 1, 10, 'IN',  'KG', '2024-01-01'),
+                              (2, 1,  2, 'OUT', 'KG', '2024-01-03'),
+                              (3, 1,  5, 'IN',  'KG', '2024-01-05'),
+
+                              (4, 2, 20, 'IN',  'KG', '2024-01-01'),
+                              (5, 2,  3, 'OUT', 'KG', '2024-01-04'),
+
+                              (6, 3, 15, 'IN',  'KG', '2024-01-02');

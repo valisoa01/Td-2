@@ -31,13 +31,15 @@ ALTER TABLE dish RENAME COLUMN price TO selling_price;
 ALTER TABLE DishIngredient drop COLUMN id_dish;
 
 create type  mouvement_type as enum('IN','OUT');
-CREATE TABLE stock_movement (
-                                id INT PRIMARY KEY, -- identifiant métier
-                                ingredient_id INT NOT NULL REFERENCES ingredient(id),
-                                stock_value_id INT NOT NULL REFERENCES stock_value(id),
-                                type mouvement_type NOT NULL,
-                                creation_datetime TIMESTAMP NOT NULL
+CREATE TABLE stockmovement (
+                               id_stock INT PRIMARY KEY, -- identifiant métier
+                               id_ingredient INT REFERENCES ingredient(id),
+                               quantity DOUBLE PRECISION NOT NULL,
+                               type mouvement_type NOT NULL,
+                               unit unit_type NOT NULL,
+                               creation_datetime DATE NOT NULL
 );
+
 
  CREATE TABLE stock_value (
                              id SERIAL PRIMARY KEY,
