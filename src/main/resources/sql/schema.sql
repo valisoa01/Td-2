@@ -46,5 +46,16 @@ CREATE TABLE stockmovement (
                              quantity DOUBLE PRECISION NOT NULL,
                              unit unit_type NOT NULL
 );
-
+select * from dish;
+CREATE TABLE Orders(
+    id serial primary key ,
+    reference varchar(50),
+    creaction_datetime timestamp
+);
+create Table DishOrder(
+    id serial primary key ,
+    id_order int references Orders(id),
+    id_dish int references dish(id),
+    quantity int
+);
 

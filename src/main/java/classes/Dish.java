@@ -9,7 +9,8 @@ public class Dish {
     private final int id;
     private final String name;
     private final DishTypeEnum dishType;
-    private final List<Ingredient> ingredients;
+//    private final List<Ingredient> ingredients;
+    private List<Ingredient> ingredients;
     private Double price;
 
     public Dish(int id, String name, DishTypeEnum dishType, Double price) {
@@ -17,7 +18,7 @@ public class Dish {
         this.name = name;
         this.dishType = dishType;
         this.price = price;
-        this.ingredients = new ArrayList<>();
+        this.ingredients = new ArrayList<Ingredient>();
     }
 
     public int getId() { return id; }
@@ -77,5 +78,12 @@ public class Dish {
     @Override
     public int hashCode() {
         return Objects.hash(id, name, dishType);
+    }
+
+    public Double getDishCost() {
+
+    }
+    public Double getGrossMargin() {
+
     }
 }

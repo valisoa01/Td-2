@@ -54,8 +54,10 @@ public class DBRetriever {
     /* ===================================== */
     /* ===== STOCK MOVEMENTS (READ) ======== */
     /* ===================================== */
-
-    public List<StockMovement> findStockMovementsByIngredientId(int ingredientId) {
+//    private List<Ingredient> findIngredientDishId(int dishId) {
+//
+//    }
+    public List<StockMouvement> findStockMovementsByIngredientId(int ingredientId) {
 
         String sql = """
             SELECT id_stock,
@@ -68,7 +70,7 @@ public class DBRetriever {
             ORDER BY creation_datetime
         """;
 
-        List<StockMovement> movements = new ArrayList<>();
+        List<StockMouvement> movements = new ArrayList<>();
 
         try (Connection conn = DBConnection.getDBConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -78,11 +80,11 @@ public class DBRetriever {
 
             while (rs.next()) {
 
-                StockMovement sm = new StockMovement();
+                StockMouvement sm = new StockMouvement();
                 sm.setId(rs.getInt("id_stock"));
                 sm.setQuantity(rs.getDouble("quantity"));
                 sm.setMouvementType(
-                        Mouvement_type.valueOf(rs.getString("type"))
+                        MouvementType.valueOf(rs.getString("type"))
                 );
                 sm.setUnit(Unit.valueOf(rs.getString("unit")));
                 sm.setCreaction_datetime(
@@ -130,7 +132,7 @@ public class DBRetriever {
             }
 
             /* 2️⃣ Sauvegarde des mouvements de stock */
-            for (StockMovement sm : ingredient.getStockMovementList()) {
+            for (StockMouvement sm : ingredient.getStockMovementList()) {
 
                 String insertMovement = """
                     INSERT INTO stockmovement
@@ -172,9 +174,9 @@ public class DBRetriever {
 
         double stock = 0;
 
-        for (StockMovement sm : ingredient.getStockMovementList()) {
+        for (StockMouvement sm : ingredient.getStockMovementList()) {
             if (!sm.getCreaction_datetime().isAfter(date)) {
-                if (sm.getMouvementType() == Mouvement_type.IN) {
+                if (sm.getMouvementType() == MouvementType.IN) {
                     stock += sm.getQuantity();
                 } else {
                     stock -= sm.getQuantity();

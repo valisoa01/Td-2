@@ -1,5 +1,5 @@
 package classes;
 
-public enum Mouvement_type {
+public enum MouvementType {
     IN,OUT
 }

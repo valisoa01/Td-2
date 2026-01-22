@@ -13,7 +13,7 @@ public class Ingredient {
     private CategoryEnum category;
 
     // 🔹 AJOUT OBLIGATOIRE TD 4
-    private List<StockMovement> stockMovementList = new ArrayList<>();
+    private List<StockMouvement> stockMouvementList = new ArrayList<>();
 
     public Ingredient(int id, String name, double price, CategoryEnum category, Dish dish) {
         this.id = id;
@@ -35,8 +35,8 @@ public class Ingredient {
         this.id = id;
     }
 
-    public List<StockMovement> getStockMovementList() {
-        return stockMovementList;
+    public List<StockMouvement> getStockMovementList() {
+        return stockMouvementList;
     }
 
     /* ===================== */
@@ -44,8 +44,8 @@ public class Ingredient {
     /* ===================== */
 
     // 🔹 UTILISÉ PAR DBRetriever
-    public void setStockMovementList(List<StockMovement> stockMovementList) {
-        this.stockMovementList = stockMovementList;
+    public void setStockMovementList(List<StockMouvement> stockMouvementList) {
+        this.stockMouvementList = stockMouvementList;
     }
 
     /* ===================== */
@@ -55,9 +55,9 @@ public class Ingredient {
     public double getStockValueAt(LocalDate date) {
         double stock = 0;
 
-        for (StockMovement sm : stockMovementList) {
+        for (StockMouvement sm : stockMouvementList) {
             if (!sm.getCreaction_datetime().isAfter(date)) {
-                if (sm.getMouvementType() == Mouvement_type.IN) {
+                if (sm.getMouvementType() == MouvementType.IN) {
                     stock += sm.getQuantity();
                 } else {
                     stock -= sm.getQuantity();

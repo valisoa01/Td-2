@@ -2,11 +2,11 @@ package classes;
 
 import java.time.LocalDate;
 
-public class StockMovement {
+public class StockMouvement {
 
         private int id;
         private Ingredient ingredient;
-        private Mouvement_type mouvementType;
+        private MouvementType mouvementType;
         private double quantity;
         private Unit unit;
         private LocalDate creaction_datetime;
@@ -27,11 +27,11 @@ public class StockMovement {
         this.ingredient = ingredient;
     }
 
-    public Mouvement_type getMouvementType() {
+    public MouvementType getMouvementType() {
         return mouvementType;
     }
 
-    public void setMouvementType(Mouvement_type mouvementType) {
+    public void setMouvementType(MouvementType mouvementType) {
         this.mouvementType = mouvementType;
     }
 
