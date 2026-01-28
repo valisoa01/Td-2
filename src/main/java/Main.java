@@ -8,12 +8,12 @@ public class Main {
 
         DBRetriever db = new DBRetriever();
 
-        Ingredient ing = db.findIngredientById(1);
-
-        double stock = ing.getStockValueAt(
-                LocalDate.of(2024, 1, 6)
-        );
-
-        System.out.println("Stock Laitue au 06/01/2024 = " + stock + " KG");
+//        Ingredient ing = db.findIngredientById(1);
+//
+//        double stock = ing.getStockValueAt(
+//                LocalDate.of(2024, 1, 6)
+//        );
+//
+//        System.out.println("Stock Laitue au 06/01/2024 = " + stock + " KG");
     }
 }

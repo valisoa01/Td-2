@@ -6,14 +6,8 @@ CREATE TABLE Dish (
 );
 
 CREATE TYPE category_enum AS ENUM ('VEGETABLE', 'ANIMAL', 'MARINE', 'DAIRY', 'OTHER');
--- CREATE TABLE Dish_Ingredient (
---     id_dish INTEGER REFERENCES Dish(id),
---     id_ingredient INTEGER REFERENCES Ingredient(id),
---     required_quantity NUMERIC,
---
---     PRIMARY KEY (id_dish, id_ingredient)
--- );
 CREATE TYPE unit_type AS ENUM ('KG','L');
+ALTER TYPE unit_type ADD VALUE 'PCS';
 CREATE TABLE DishIngredient(
                                id_dishIngredient SERIAL primary key,
                                id_dish int,
@@ -58,4 +52,9 @@ create Table DishOrder(
     id_dish int references dish(id),
     quantity int
 );
-
+select * from ingredient;
+ select  * from  stockmovement;
+select ingredient.name, s.unit
+from ingredient
+         inner join public.stockmovement s
+                    on ingredient.id = s.id_ingredient;

@@ -1,11 +1,14 @@
 package Connection;
 
 import classes.*;
+import org.aspectj.runtime.internal.Conversions;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public class DBRetriever {
 
@@ -156,11 +159,17 @@ public class DBRetriever {
             return ingredient;
 
         } catch (Exception e) {
-            try { conn.rollback(); } catch (SQLException ignored) {}
+            try {
+                conn.rollback();
+            } catch (SQLException ignored) {
+            }
             throw new RuntimeException(e);
 
         } finally {
-            try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException ignored) {
+            }
         }
     }
 
@@ -185,4 +194,110 @@ public class DBRetriever {
         }
         return stock;
     }
+
+    public Order saveOrder(Order orderToSave) {
+        Connection conn = DBConnection.getDBConnection();
+
+        try {
+            conn.setAutoCommit(false);
+
+            if (orderToSave.getId() == 0) {
+
+                String sql = """
+                INSERT INTO orders (id, reference, creaction_datetime)
+                VALUES (?, ?, ?)
+            """;
+
+                try (PreparedStatement ps = conn.prepareStatement(
+                        sql,
+                        Statement.RETURN_GENERATED_KEYS
+                )) {
+                    ps.setString(1, orderToSave.getReference());
+                    ps.setTimestamp(2,Timestamp.from(orderToSave.getCreationDate()));
+                    ps.executeUpdate();
+
+                    ResultSet rs = ps.getGeneratedKeys();
+                    if (rs.next()) {
+                        orderToSave.setId(rs.getInt(1));
+                    }
+                }
+                saveDishOrders(orderToSave, conn);
+            }
+            conn.commit();
+            return orderToSave;
+
+        } catch (Exception e) {
+            try { conn.rollback(); } catch (SQLException ignored) {}
+            throw new RuntimeException(e);
+
+        } finally {
+            try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
+        }
+    }
+    private void saveDishOrders(Order order, Connection conn) throws SQLException {
+        String sql = """
+        INSERT INTO Dishorder (id_order, id_dish, quantity)
+        VALUES (?, ?, ?)
+    """;
+        for (DishOrder dishOrder : order.getDishOrders()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, order.getId());
+                ps.setInt(2, dishOrder.getDish().getId());
+                ps.setInt(3, dishOrder.getQuantity());
+                ps.executeUpdate();
+            }
+        }
+    }
+    public class UnitConversionService {
+
+         private static final Map<String, ConversionRule> RULES = Map.of(
+
+                "Tomate",   new ConversionRule(10.0, null),
+                "Laitue",   new ConversionRule(12.0, null),
+                "Poulet",   new ConversionRule(8.0, null),
+                "Chocolat", new ConversionRule(null, 2.5),
+                "Beurre",   new ConversionRule(4.0, 5.0)
+        );
+
+        public static double convert(
+                String ingredientName,
+                double quantity,
+                Unit from,
+                Unit to
+        ) {
+
+            if (from == to) {
+                return quantity;
+            }
+
+            ConversionRule rule = RULES.get(ingredientName);
+            if (rule == null) {
+                throw new IllegalArgumentException("Aucune règle pour " + ingredientName);
+            }
+
+            // PCS <-> KG
+            if (from == Unit.PCS && to == Unit.KG) {
+                return quantity / rule.getPcsPerKg();
+            }
+            if (from == Unit.KG && to == Unit.PCS) {
+                return quantity * rule.getPcsPerKg();
+            }
+
+            // L <-> KG
+            if (from == Unit.L && to == Unit.KG) {
+                return quantity / rule.getLPerKg();
+            }
+            if (from == Unit.KG && to == Unit.L) {
+                return quantity * rule.getLPerKg();
+            }
+
+            // Interdit : PCS <-> L
+            throw new IllegalArgumentException(
+                    "Conversion impossible pour " + ingredientName +
+                            " de " + from + " vers " + to
+            );
+        }
+    }
 }
+
+

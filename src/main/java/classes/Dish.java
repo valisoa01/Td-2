@@ -21,6 +21,7 @@ public class Dish {
         this.ingredients = new ArrayList<Ingredient>();
     }
 
+
     public int getId() { return id; }
     public String getName() { return name; }
     public DishTypeEnum getDishType() { return dishType; }

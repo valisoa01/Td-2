@@ -13,8 +13,7 @@ public class DBConnection {
         String user = System.getenv("USERNAME");
         String pass = System.getenv("PASSWORD");
 
-        // If env vars are not set, try to read fallback values from application.properties on classpath
-        if (url == null || user == null || pass == null) {
+         if (url == null || user == null || pass == null) {
             try (InputStream is = DBConnection.class.getClassLoader().getResourceAsStream("application.properties")) {
                 if (is != null) {
                     Properties props = new Properties();
