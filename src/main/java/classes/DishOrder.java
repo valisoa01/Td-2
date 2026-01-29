@@ -1,22 +1,12 @@
 package classes;
 
 public class DishOrder {
-    private int id;
     private Dish dish;
-    private Integer quantity;
+    private int quantity;
 
-    public DishOrder() {
-     }
-
-    public DishOrder(Dish salade, int i) {
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
+    public DishOrder(Dish dish, int quantity) {
+        this.dish = dish; // important !
+        this.quantity = quantity;
     }
 
     public Dish getDish() {
@@ -27,12 +17,14 @@ public class DishOrder {
         this.dish = dish;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
+    public void setId(int generatedId) {
+    }
 }

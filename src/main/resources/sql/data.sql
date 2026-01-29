@@ -4,7 +4,10 @@ INSERT INTO Dish (id, name, dish_type) VALUES
 (3, 'Riz aux légumes', 'MAIN'),
 (4, 'Gâteau au chocolat', 'DESSERT'),
 (5, 'Salade de fruits', 'DESSERT');
-INSERT INTO Ingredient (id, name, price, category) VALUES
+select * from dishorder;
+select  * from dish;
+
+ INSERT INTO Ingredient (id, name, price, category) VALUES
 (1, 'Laitue', 800.00, 'VEGETABLE'),
 (2, 'Tomate', 600.00, 'VEGETABLE'),
 (3, 'Poulet', 4500.00, 'ANIMAL'),
@@ -24,4 +27,5 @@ INSERT INTO stockmovement VALUES
 INSERT INTO restaurant_table (id, number) VALUES
                                                      (1, 1),
                                                      (2, 2),
-                                                     (3, 3);
+                                                     (3, 3),
+                                                     (4,4);

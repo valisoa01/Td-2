@@ -77,4 +77,35 @@ WHERE table_id = ?
   AND arrriva_datetime < ?
   AND departure_datetime > ?
 LIMIT 1;
+select* from Orders;
 
+select  * from DishOrder;
+select * from Dish;
+select * from restaurant_table;
+ALTER TABLE dishorder DROP COLUMN id;   656
+ALTER TABLE dishorder ADD COLUMN id SERIAL PRIMARY KEY;
+
+INSERT INTO orders (id, reference, creaction_datetime, table_id, arrriva_datetime, departure_datetime)
+VALUES
+    (1, 'CMD-001', NOW(), 1, NOW() + INTERVAL '10 minutes', NOW() + INTERVAL '1 hour'),
+
+    (2, 'CMD-002', NOW(), 2, NOW() + INTERVAL '15 minutes', NOW() + INTERVAL '1 hour 30 minutes'),
+
+    (3, 'CMD-003', NOW(), 3, NOW() + INTERVAL '20 minutes', NOW() + INTERVAL '2 hours');
+
+
+INSERT INTO dishorder (id, id_order, id_dish, quantity)
+VALUES
+-- Commande 1
+(1, 1, 1, 1), -- Salade fraîche
+(2, 1, 2, 1), -- Poulet grillé
+(3, 1, 4, 1), -- Gâteau au chocolat
+
+-- Commande 2
+(4, 2, 1, 2), -- 2 Salades fraîches
+(5, 2, 3, 1), -- Riz aux légumes
+(6, 2, 5, 1), -- Salade de fruits
+
+-- Commande 3
+(7, 3, 2, 2), -- 2 Poulets grillés
+(8, 3, 4, 2); -- 2 Gâteaux au chocolat

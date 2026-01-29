@@ -11,8 +11,8 @@ import java.util.Map;
 
 public class DBRetriever {
 
-
     public Ingredient findIngredientById(int ingredientId) {
+        System.out.println("DEBUG: Recherche ingrédient id=" + ingredientId);
 
         String sql = """
             SELECT id, name, price, category
@@ -38,20 +38,18 @@ public class DBRetriever {
                     null
             );
 
-             ingredient.setStockMovementList(
+            ingredient.setStockMovementList(
                     findStockMovementsByIngredientId(ingredientId)
             );
 
             return ingredient;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Erreur lors de la recherche de l'ingrédient", e);
         }
     }
 
-
     public List<StockMouvement> findStockMovementsByIngredientId(int ingredientId) {
-
         String sql = """
             SELECT id_stock,
                    quantity,
@@ -72,7 +70,6 @@ public class DBRetriever {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
                 StockMouvement sm = new StockMouvement();
                 sm.setId(rs.getInt("id_stock"));
                 sm.setQuantity(rs.getDouble("quantity"));
@@ -90,19 +87,20 @@ public class DBRetriever {
             return movements;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Erreur lors de la recherche des mouvements de stock", e);
         }
     }
 
-
     public Ingredient saveIngredient(Ingredient ingredient) {
+        System.out.println("DEBUG: Sauvegarde ingrédient: " + ingredient.getName());
 
         Connection conn = DBConnection.getDBConnection();
 
         try {
             conn.setAutoCommit(false);
 
-             if (ingredient.getId() == 0) {
+            // Insertion de l'ingrédient s'il n'existe pas
+            if (ingredient.getId() == 0) {
                 String insertIngredient = """
                     INSERT INTO ingredient(name, price, category)
                     VALUES (?, ?, ?::category_enum)
@@ -117,11 +115,12 @@ public class DBRetriever {
                     ResultSet rs = ps.executeQuery();
                     rs.next();
                     ingredient.setId(rs.getInt(1));
+                    System.out.println("DEBUG: Ingrédient créé avec id=" + ingredient.getId());
                 }
             }
 
-             for (StockMouvement sm : ingredient.getStockMovementList()) {
-
+            // Insertion des mouvements de stock
+            for (StockMouvement sm : ingredient.getStockMovementList()) {
                 String insertMovement = """
                     INSERT INTO stockmovement
                     (id_stock, id_ingredient, quantity, type, unit, creation_datetime)
@@ -141,6 +140,7 @@ public class DBRetriever {
             }
 
             conn.commit();
+            System.out.println("DEBUG: Ingredient sauvegardé avec succès");
             return ingredient;
 
         } catch (Exception e) {
@@ -148,7 +148,7 @@ public class DBRetriever {
                 conn.rollback();
             } catch (SQLException ignored) {
             }
-            throw new RuntimeException(e);
+            throw new RuntimeException("Erreur lors de la sauvegarde de l'ingrédient", e);
 
         } finally {
             try {
@@ -158,9 +158,7 @@ public class DBRetriever {
         }
     }
 
-
     public double getStockValueAt(int ingredientId, LocalDate date) {
-
         Ingredient ingredient = findIngredientById(ingredientId);
 
         double stock = 0;
@@ -177,10 +175,37 @@ public class DBRetriever {
         return stock;
     }
 
+    public Table findTableById(Integer id) {
+        System.out.println("DEBUG: Recherche table id=" + id);
+
+        String sql = "SELECT id, number FROM restaurant_table WHERE id = ?";
+
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+
+            if (!rs.next()) {
+                throw new RuntimeException("Table non trouvée (id=" + id + ")");
+            }
+
+            Table table = new Table();
+            table.setId(rs.getInt("id"));
+            table.setNumber(rs.getInt("number")); // CORRECTION ICI
+            System.out.println("DEBUG: Table trouvée: id=" + table.getId() + ", numéro=" + table.getNumber());
+            return table;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recherche de la table", e);
+        }
+    }
 
     public Order saveOrder(Order orderToSave) {
+        System.out.println("\nDEBUG: Début saveOrder pour " + orderToSave.getReference());
 
         if (orderToSave.getTable() == null) {
+            System.out.println("DEBUG: Table est null");
             throw new RuntimeException("Table non fournie");
         }
 
@@ -193,15 +218,16 @@ public class DBRetriever {
             Instant arrival = orderToSave.getArrival_Datetime();
             Instant departure = orderToSave.getDepartureDatetime();
 
-             if (!isTableAvaible(tableId, arrival, departure, conn)) {
+            System.out.println("DEBUG: Table ID=" + tableId + ", Arrival=" + arrival + ", Departure=" + departure);
 
-                List<Integer> freeTables =
-                        findAvailableTables(arrival, departure, conn);
+            // Vérifier si la table est disponible
+            if (!isTableAvailable(tableId, arrival, departure, conn)) {
+                System.out.println("DEBUG: Table " + tableId + " n'est pas disponible");
+
+                List<Integer> freeTables = findAvailableTables(arrival, departure, conn);
 
                 if (freeTables.isEmpty()) {
-                    throw new RuntimeException(
-                            "Aucune table n'est disponible pour ce créneau"
-                    );
+                    throw new RuntimeException("Aucune table n'est disponible pour ce créneau");
                 } else {
                     throw new RuntimeException(
                             "La table " + orderToSave.getTable().getNumber()
@@ -211,13 +237,15 @@ public class DBRetriever {
                 }
             }
 
-             String insertOrder = """
-            INSERT INTO orders
-            (reference, creaction_datetime, table_id, arrriva_datetime, departure_datetime)
-            VALUES (?, ?, ?, ?, ?)
-            RETURNING id
-        """;
+            System.out.println("DEBUG: Table " + tableId + " est disponible");
 
+            // Insertion de la commande - CORRECTION DES NOMS DE COLONNES
+            String insertOrder = """
+                     INSERT INTO orders
+                     (reference, creaction_datetime, table_id, arrriva_datetime, departure_datetime)
+                    VALUES (?, ?, ?, ?, ?)
+                    RETURNING id
+                    """;
             try (PreparedStatement ps = conn.prepareStatement(insertOrder)) {
                 ps.setString(1, orderToSave.getReference());
                 ps.setTimestamp(2, Timestamp.from(orderToSave.getCreationDate()));
@@ -225,42 +253,72 @@ public class DBRetriever {
                 ps.setTimestamp(4, Timestamp.from(arrival));
                 ps.setTimestamp(5, Timestamp.from(departure));
 
+                System.out.println("DEBUG: Exécution INSERT orders: ref=" + orderToSave.getReference());
+
                 ResultSet rs = ps.executeQuery();
                 rs.next();
                 orderToSave.setId(rs.getInt(1));
+                System.out.println("DEBUG: Order créé avec id=" + orderToSave.getId());
             }
 
-             saveDishOrders(orderToSave, conn);
+            // Sauvegarde des plats de la commande
+            saveDishOrders(orderToSave, conn);
 
             conn.commit();
+            System.out.println("DEBUG: Commande " + orderToSave.getReference() + " sauvegardée avec succès");
             return orderToSave;
 
         } catch (Exception e) {
-            try { conn.rollback(); } catch (SQLException ignored) {}
+            try {
+                conn.rollback();
+            } catch (SQLException ignored) {}
+            System.out.println("DEBUG: Erreur lors de la sauvegarde: " + e.getMessage());
             throw new RuntimeException(e.getMessage(), e);
 
         } finally {
-            try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException ignored) {}
         }
     }
 
     private void saveDishOrders(Order order, Connection conn) throws SQLException {
+        if (order.getDishOrders() == null || order.getDishOrders().isEmpty()) {
+            System.out.println("DEBUG: Aucun dish order à sauvegarder");
+            return;
+        }
+
         String sql = """
-        INSERT INTO Dishorder (id_order, id_dish, quantity)
+        INSERT INTO dishorder (id_order, id_dish, quantity)
         VALUES (?, ?, ?)
+        RETURNING id
     """;
 
+        System.out.println("DEBUG: Sauvegarde de " + order.getDishOrders().size() + " dish orders");
+
         for (DishOrder dishOrder : order.getDishOrders()) {
+            if (dishOrder.getDish() == null) {
+                throw new RuntimeException("DishOrder contient un Dish null");
+            }
+
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, order.getId());
                 ps.setInt(2, dishOrder.getDish().getId());
                 ps.setInt(3, dishOrder.getQuantity());
-                ps.executeUpdate();
+
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    int generatedId = rs.getInt(1);
+                    dishOrder.setId(generatedId); // assigner l'id généré si nécessaire
+                    System.out.println("DEBUG: DishOrder ajouté avec id=" + generatedId +
+                            " pour dish id=" + dishOrder.getDish().getId());
+                }
             }
         }
     }
 
-    public boolean isTableAvaible(
+
+    public boolean isTableAvailable(
             Integer tableId,
             Instant arrival,
             Instant departure,
@@ -268,13 +326,13 @@ public class DBRetriever {
     ) throws SQLException {
 
         String sql = """
-        SELECT 1
-        FROM orders
-        WHERE table_id = ?
-          AND orders.arrriva_datetime < ?
-          AND departure_datetime > ?
-        LIMIT 1
-    """;
+            SELECT 1
+            FROM orders
+            WHERE table_id = ?
+              AND arrriva_datetime < ?
+              AND departure_datetime > ?
+            LIMIT 1
+        """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, tableId);
@@ -282,9 +340,12 @@ public class DBRetriever {
             ps.setTimestamp(3, Timestamp.from(arrival));
 
             ResultSet rs = ps.executeQuery();
-            return !rs.next();
+            boolean isAvailable = !rs.next();
+            System.out.println("DEBUG: isTableAvailable(" + tableId + ") = " + isAvailable);
+            return isAvailable;
         }
     }
+
 
     private List<Integer> findAvailableTables(
             Instant arrival,
@@ -293,16 +354,16 @@ public class DBRetriever {
     ) throws SQLException {
 
         String sql = """
-        SELECT number
-        FROM restaurant_table
-        WHERE id NOT IN (
-            SELECT table_id
-            FROM orders
-            WHERE orders.arrriva_datetime < ?
-              AND departure_datetime > ?
-        )
-        ORDER BY number
-    """;
+            SELECT id
+            FROM restaurant_table
+            WHERE id NOT IN (
+                SELECT table_id
+                FROM orders
+                WHERE orders.arrriva_datetime < ?
+                  AND departure_datetime > ?
+            )
+            ORDER BY number
+        """;
 
         List<Integer> tables = new ArrayList<>();
 
@@ -312,18 +373,18 @@ public class DBRetriever {
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                tables.add(rs.getInt("number"));
+                tables.add(rs.getInt("id"));
             }
         }
 
+        System.out.println("DEBUG: Tables disponibles: " + tables);
         return tables;
     }
 
+    // Classe de conversion d'unités (rendue statique)
+    public static class UnitConversionService {
 
-    public class UnitConversionService {
-
-         private static final Map<String, ConversionRule> RULES = Map.of(
-
+        private static final Map<String, ConversionRule> RULES = Map.of(
                 "Tomate",   new ConversionRule(10.0, null),
                 "Laitue",   new ConversionRule(12.0, null),
                 "Poulet",   new ConversionRule(8.0, null),
@@ -337,7 +398,6 @@ public class DBRetriever {
                 Unit from,
                 Unit to
         ) {
-
             if (from == to) {
                 return quantity;
             }
@@ -347,26 +407,57 @@ public class DBRetriever {
                 throw new IllegalArgumentException("Aucune règle pour " + ingredientName);
             }
 
-             if (from == Unit.PCS && to == Unit.KG) {
+            // Conversion PCS <-> KG
+            if (from == Unit.PCS && to == Unit.KG) {
+                if (rule.getPcsPerKg() == null) {
+                    throw new IllegalArgumentException("Conversion PCS->KG impossible pour " + ingredientName);
+                }
                 return quantity / rule.getPcsPerKg();
             }
             if (from == Unit.KG && to == Unit.PCS) {
+                if (rule.getPcsPerKg() == null) {
+                    throw new IllegalArgumentException("Conversion KG->PCS impossible pour " + ingredientName);
+                }
                 return quantity * rule.getPcsPerKg();
             }
 
-             if (from == Unit.L && to == Unit.KG) {
+            // Conversion L <-> KG
+            if (from == Unit.L && to == Unit.KG) {
+                if (rule.getLPerKg() == null) {
+                    throw new IllegalArgumentException("Conversion L->KG impossible pour " + ingredientName);
+                }
                 return quantity / rule.getLPerKg();
             }
             if (from == Unit.KG && to == Unit.L) {
+                if (rule.getLPerKg() == null) {
+                    throw new IllegalArgumentException("Conversion KG->L impossible pour " + ingredientName);
+                }
                 return quantity * rule.getLPerKg();
             }
 
-             throw new IllegalArgumentException(
+            throw new IllegalArgumentException(
                     "Conversion impossible pour " + ingredientName +
                             " de " + from + " vers " + to
             );
         }
     }
+
+    // Classe interne pour les règles de conversion
+    public static class ConversionRule {
+        private final Double pcsPerKg;
+        private final Double lPerKg;
+
+        public ConversionRule(Double pcsPerKg, Double lPerKg) {
+            this.pcsPerKg = pcsPerKg;
+            this.lPerKg = lPerKg;
+        }
+
+        public Double getPcsPerKg() {
+            return pcsPerKg;
+        }
+
+        public Double getLPerKg() {
+            return lPerKg;
+        }
+    }
 }
-
-
