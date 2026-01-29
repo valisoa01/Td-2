@@ -1,15 +1,10 @@
 package classes;
 
-import Connection.DBRetriever;
-
-import java.sql.Connection;
-import java.time.Instant;
-
 public class Table {
     private Integer id;
     private Integer number;
 
-    public Table(Integer id) {}
+    public Table(Integer id, int i) {}
 
     public Integer getId() {
         return id;

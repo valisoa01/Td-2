@@ -8,6 +8,9 @@ public class DishOrder {
     public DishOrder() {
      }
 
+    public DishOrder(Dish salade, int i) {
+    }
+
     public int getId() {
         return id;
     }

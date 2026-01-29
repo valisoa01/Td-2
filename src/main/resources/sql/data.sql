@@ -21,3 +21,7 @@ INSERT INTO stockmovement VALUES
                               (5, 2,  3, 'OUT', 'KG', '2024-01-04'),
 
                               (6, 3, 15, 'IN',  'KG', '2024-01-02');
+INSERT INTO restaurant_table (id, number) VALUES
+                                                     (1, 1),
+                                                     (2, 2),
+                                                     (3, 3);
