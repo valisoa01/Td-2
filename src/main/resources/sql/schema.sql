@@ -58,3 +58,23 @@ select ingredient.name, s.unit
 from ingredient
          inner join public.stockmovement s
                     on ingredient.id = s.id_ingredient;
+create  table restaurant_table(
+    id serial primary key ,
+    number int not null
+);
+alter table Orders
+add column table_id int references restaurant_table(id) not null ,
+add column arrriva_datetime timestamp not null ;
+
+alter table Orders
+add column departure_datetime timestamp not null ;
+
+
+
+SELECT 1
+FROM Orders
+WHERE table_id = ?
+  AND arrriva_datetime < ?
+  AND departure_datetime > ?
+LIMIT 1;
+

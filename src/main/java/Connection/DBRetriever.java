@@ -1,20 +1,16 @@
 package Connection;
 
 import classes.*;
-import org.aspectj.runtime.internal.Conversions;
 
 import java.sql.*;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
 public class DBRetriever {
 
-    /* =============================== */
-    /* ===== INGREDIENT ============== */
-    /* =============================== */
 
     public Ingredient findIngredientById(int ingredientId) {
 
@@ -42,8 +38,7 @@ public class DBRetriever {
                     null
             );
 
-            // Charger les mouvements de stock
-            ingredient.setStockMovementList(
+             ingredient.setStockMovementList(
                     findStockMovementsByIngredientId(ingredientId)
             );
 
@@ -54,12 +49,7 @@ public class DBRetriever {
         }
     }
 
-    /* ===================================== */
-    /* ===== STOCK MOVEMENTS (READ) ======== */
-    /* ===================================== */
-//    private List<Ingredient> findIngredientDishId(int dishId) {
-//
-//    }
+
     public List<StockMouvement> findStockMovementsByIngredientId(int ingredientId) {
 
         String sql = """
@@ -104,9 +94,6 @@ public class DBRetriever {
         }
     }
 
-    /* ===================================== */
-    /* ===== INGREDIENT + STOCK (SAVE) ===== */
-    /* ===================================== */
 
     public Ingredient saveIngredient(Ingredient ingredient) {
 
@@ -115,8 +102,7 @@ public class DBRetriever {
         try {
             conn.setAutoCommit(false);
 
-            /* 1️⃣ Sauvegarde de l’ingredient si nouveau */
-            if (ingredient.getId() == 0) {
+             if (ingredient.getId() == 0) {
                 String insertIngredient = """
                     INSERT INTO ingredient(name, price, category)
                     VALUES (?, ?, ?::category_enum)
@@ -134,8 +120,7 @@ public class DBRetriever {
                 }
             }
 
-            /* 2️⃣ Sauvegarde des mouvements de stock */
-            for (StockMouvement sm : ingredient.getStockMovementList()) {
+             for (StockMouvement sm : ingredient.getStockMovementList()) {
 
                 String insertMovement = """
                     INSERT INTO stockmovement
@@ -173,9 +158,6 @@ public class DBRetriever {
         }
     }
 
-    /* ===================================== */
-    /* ===== STOCK CALCULATION ============= */
-    /* ===================================== */
 
     public double getStockValueAt(int ingredientId, LocalDate date) {
 
@@ -195,50 +177,79 @@ public class DBRetriever {
         return stock;
     }
 
+
     public Order saveOrder(Order orderToSave) {
+
+        if (orderToSave.getTable() == null) {
+            throw new RuntimeException("Table non fournie");
+        }
+
         Connection conn = DBConnection.getDBConnection();
 
         try {
             conn.setAutoCommit(false);
 
-            if (orderToSave.getId() == 0) {
+            Integer tableId = orderToSave.getTable().getId();
+            Instant arrival = orderToSave.getArrival_Datetime();
+            Instant departure = orderToSave.getDepartureDatetime();
 
-                String sql = """
-                INSERT INTO orders (id, reference, creaction_datetime)
-                VALUES (?, ?, ?)
-            """;
+             if (!isTableAvaible(tableId, arrival, departure, conn)) {
 
-                try (PreparedStatement ps = conn.prepareStatement(
-                        sql,
-                        Statement.RETURN_GENERATED_KEYS
-                )) {
-                    ps.setString(1, orderToSave.getReference());
-                    ps.setTimestamp(2,Timestamp.from(orderToSave.getCreationDate()));
-                    ps.executeUpdate();
+                List<Integer> freeTables =
+                        findAvailableTables(arrival, departure, conn);
 
-                    ResultSet rs = ps.getGeneratedKeys();
-                    if (rs.next()) {
-                        orderToSave.setId(rs.getInt(1));
-                    }
+                if (freeTables.isEmpty()) {
+                    throw new RuntimeException(
+                            "Aucune table n'est disponible pour ce créneau"
+                    );
+                } else {
+                    throw new RuntimeException(
+                            "La table " + orderToSave.getTable().getNumber()
+                                    + " n'est pas disponible. Tables disponibles : "
+                                    + freeTables
+                    );
                 }
-                saveDishOrders(orderToSave, conn);
             }
+
+             String insertOrder = """
+            INSERT INTO orders
+            (reference, creaction_datetime, table_id, arrriva_datetime, departure_datetime)
+            VALUES (?, ?, ?, ?, ?)
+            RETURNING id
+        """;
+
+            try (PreparedStatement ps = conn.prepareStatement(insertOrder)) {
+                ps.setString(1, orderToSave.getReference());
+                ps.setTimestamp(2, Timestamp.from(orderToSave.getCreationDate()));
+                ps.setInt(3, tableId);
+                ps.setTimestamp(4, Timestamp.from(arrival));
+                ps.setTimestamp(5, Timestamp.from(departure));
+
+                ResultSet rs = ps.executeQuery();
+                rs.next();
+                orderToSave.setId(rs.getInt(1));
+            }
+
+             saveDishOrders(orderToSave, conn);
+
             conn.commit();
             return orderToSave;
 
         } catch (Exception e) {
             try { conn.rollback(); } catch (SQLException ignored) {}
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage(), e);
 
         } finally {
             try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
         }
     }
+
     private void saveDishOrders(Order order, Connection conn) throws SQLException {
         String sql = """
         INSERT INTO Dishorder (id_order, id_dish, quantity)
         VALUES (?, ?, ?)
     """;
+
         for (DishOrder dishOrder : order.getDishOrders()) {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, order.getId());
@@ -248,6 +259,67 @@ public class DBRetriever {
             }
         }
     }
+
+    public boolean isTableAvaible(
+            Integer tableId,
+            Instant arrival,
+            Instant departure,
+            Connection conn
+    ) throws SQLException {
+
+        String sql = """
+        SELECT 1
+        FROM orders
+        WHERE table_id = ?
+          AND orders.arrriva_datetime < ?
+          AND departure_datetime > ?
+        LIMIT 1
+    """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, tableId);
+            ps.setTimestamp(2, Timestamp.from(departure));
+            ps.setTimestamp(3, Timestamp.from(arrival));
+
+            ResultSet rs = ps.executeQuery();
+            return !rs.next();
+        }
+    }
+
+    private List<Integer> findAvailableTables(
+            Instant arrival,
+            Instant departure,
+            Connection conn
+    ) throws SQLException {
+
+        String sql = """
+        SELECT number
+        FROM restaurant_table
+        WHERE id NOT IN (
+            SELECT table_id
+            FROM orders
+            WHERE orders.arrriva_datetime < ?
+              AND departure_datetime > ?
+        )
+        ORDER BY number
+    """;
+
+        List<Integer> tables = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.from(departure));
+            ps.setTimestamp(2, Timestamp.from(arrival));
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                tables.add(rs.getInt("number"));
+            }
+        }
+
+        return tables;
+    }
+
+
     public class UnitConversionService {
 
          private static final Map<String, ConversionRule> RULES = Map.of(
@@ -275,24 +347,21 @@ public class DBRetriever {
                 throw new IllegalArgumentException("Aucune règle pour " + ingredientName);
             }
 
-            // PCS <-> KG
-            if (from == Unit.PCS && to == Unit.KG) {
+             if (from == Unit.PCS && to == Unit.KG) {
                 return quantity / rule.getPcsPerKg();
             }
             if (from == Unit.KG && to == Unit.PCS) {
                 return quantity * rule.getPcsPerKg();
             }
 
-            // L <-> KG
-            if (from == Unit.L && to == Unit.KG) {
+             if (from == Unit.L && to == Unit.KG) {
                 return quantity / rule.getLPerKg();
             }
             if (from == Unit.KG && to == Unit.L) {
                 return quantity * rule.getLPerKg();
             }
 
-            // Interdit : PCS <-> L
-            throw new IllegalArgumentException(
+             throw new IllegalArgumentException(
                     "Conversion impossible pour " + ingredientName +
                             " de " + from + " vers " + to
             );
